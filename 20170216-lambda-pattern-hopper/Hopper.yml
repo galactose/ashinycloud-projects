@@ -1,0 +1,58 @@
+---
+  Description: 'Lambda function Hopper, looks for available datasets and runs a Lambda function.'
+  Parameters:
+    ConfigBucketName:
+      Description: The name of the S3 bucket containing configuration.
+      Type: String
+    LambdaFunctionName:
+      Description: The name of the Lambda function being executed.
+      Type: String
+  Resources:
+    HopperLambdaRole:
+      Type: AWS::IAM::Role
+      Properties:
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+          - arn:aws:iam::aws:policy/AWSLambdaFullAccess
+        AssumeRolePolicyDocument:
+          Statement:
+            - Action: sts:AssumeRole
+              Effect: Allow
+              Principal:
+                Service: lambda.amazonaws.com
+    HopperLambdaPermission:
+      Type: "AWS::Lambda::Permission"
+      Properties:
+        Principal: "events.amazonaws.com"
+        Action: lambda:InvokeFunction
+        FunctionName: 'hopper'
+        SourceArn: !GetAtt HopperEventRule.Arn
+    HopperLambdaFunction:
+      Type: AWS::Lambda::Function
+      Properties:
+        FunctionName: 'hopper'
+        Handler: handler.handler
+        Role:
+          !GetAtt HopperLambdaRole.Arn
+        Code:
+          S3Bucket:
+            Ref: ConfigBucketName
+          S3Key: hopper.zip
+        Runtime: python2.7
+        MemorySize: '512'
+        Timeout: '240'
+    HopperEventRule:
+      Type: AWS::Events::Rule
+      Properties:
+        Description: CloudWatch Event Rule to initiate the hopper which initiates the target Lambda function on the datasets in a round robin fashion.
+        Name: "hopper"
+        ScheduleExpression: 'rate(15 minutes)'
+        State: ENABLED
+        Targets:
+          - Arn:
+              !GetAtt HopperLambdaFunction.Arn
+            Id:
+              'Hopper'
+            Input:
+              "Fn::Join": [ "", [ '{ "lambda_function": "', Ref: LambdaFunctionName, '", "config_bucket": "', Ref: ConfigBucketName, '"}' ] ]
+
