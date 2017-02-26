@@ -1,8 +1,10 @@
 import boto3
 import json
 
+
 S3 = boto3.client('s3')
 lambda_client = boto3.client('lambda')
+
 
 def handler(event, context):
     print 'Event:', event
@@ -24,4 +26,3 @@ def handler(event, context):
             Payload=json.dumps(event)
         )
         print response
-
