@@ -1,0 +1,98 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Config Tag Compliance Rule
+Parameters:
+  S3Bucket:
+    Description: The S3 Bucket containing the Lambda tag compliance code.
+    Type: String
+  NotificationSNSTopicARN:
+    Description: The Topic ARN to send tagging compliance notifications to.
+    Type: String
+Resources:
+  LambdaRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      ManagedPolicyArns:
+        - Ref: TagComplianceLambdaManagedPolicy
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: "sts:AssumeRole"
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+  TagComplianceLambdaManagedPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: Provides config service and log access to lambda
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: logs:CreateLogGroup
+            Resource: !Sub |
+              arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*
+          - Effect: Allow
+            Action:
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: !Sub |
+              arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/tag-compliance:*
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+            Resource: arn:aws:s3:::*/AWSLogs/*/Config/*
+          - Effect: Allow
+            Action:
+              - sns:Publish
+            Resource:
+              Ref: NotificationSNSTopicARN
+          - Effect: Allow
+            Action:
+              - config:Put*
+              - config:Get*
+              - config:List*
+              - config:Describe*
+            Resource: !Sub |
+              arn:aws:config:${AWS::Region}:${AWS::AccountId}:config-rule/*
+  LambdaFunctionTagCompliance:
+    DependsOn: LambdaRole
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: tag-compliance
+      Handler: tag_compliance.handler
+      Role:
+        Fn::GetAtt:
+          - LambdaRole
+          - Arn
+      Code:
+        S3Bucket:
+          Ref: S3Bucket
+        S3Key: tag_compliance.py.zip
+      Runtime: python2.7
+  ConfigPermissionToCallLambda:
+    Type: AWS::Lambda::Permission
+    DependsOn: LambdaFunctionTagCompliance
+    Properties:
+      FunctionName: tag-compliance
+      Action: lambda:InvokeFunction
+      Principal: config.amazonaws.com
+  ConfigRuleTagCompliance:
+    Type: AWS::Config::ConfigRule
+    DependsOn: ConfigPermissionToCallLambda
+    Properties:
+      ConfigRuleName: ConfigRuleTagCompliance
+      Scope:
+        ComplianceResourceTypes:
+          - AWS::EC2::Instance
+      Source:
+        Owner: CUSTOM_LAMBDA
+        SourceIdentifier:
+          Fn::GetAtt:
+            - LambdaFunctionTagCompliance
+            - Arn
+        SourceDetails:
+          - EventSource: aws.config
+            MessageType: ConfigurationItemChangeNotification
+      InputParameters:
+        notification_topic_arn:
+          Ref: NotificationSNSTopicARN
