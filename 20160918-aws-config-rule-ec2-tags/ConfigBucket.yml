@@ -9,12 +9,12 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName:
-        Ref: LambdaBucketName
+        !Ref LambdaBucketName
   BackupBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
       Bucket:
-        Ref: BackupBucket
+        !Ref BackupBucket
       PolicyDocument:
         Version: "2012-10-17"
         Id: PutObjPolicy

@@ -13,7 +13,7 @@ Resources:
     Type: "AWS::IAM::Role"
     Properties:
       ManagedPolicyArns:
-        - Ref: TagComplianceLambdaManagedPolicy
+        - !Ref TagComplianceLambdaManagedPolicy
       AssumeRolePolicyDocument:
         Statement:
           - Action: "sts:AssumeRole"
@@ -45,7 +45,7 @@ Resources:
             Action:
               - sns:Publish
             Resource:
-              Ref: NotificationSNSTopicARN
+              !Ref NotificationSNSTopicARN
           - Effect: Allow
             Action:
               - config:Put*
@@ -61,12 +61,10 @@ Resources:
       FunctionName: tag-compliance
       Handler: tag_compliance.handler
       Role:
-        Fn::GetAtt:
-          - LambdaRole
-          - Arn
+        !GetAtt LambdaRole.Arn
       Code:
         S3Bucket:
-          Ref: S3Bucket
+          !Ref S3Bucket
         S3Key: tag_compliance.py.zip
       Runtime: python2.7
   ConfigPermissionToCallLambda:
@@ -87,12 +85,10 @@ Resources:
       Source:
         Owner: CUSTOM_LAMBDA
         SourceIdentifier:
-          Fn::GetAtt:
-            - LambdaFunctionTagCompliance
-            - Arn
+          !GetAtt LambdaFunctionTagCompliance.Arn
         SourceDetails:
           - EventSource: aws.config
             MessageType: ConfigurationItemChangeNotification
       InputParameters:
         notification_topic_arn:
-          Ref: NotificationSNSTopicARN
+          !Ref NotificationSNSTopicARN

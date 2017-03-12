@@ -36,7 +36,7 @@
           !GetAtt HopperLambdaRole.Arn
         Code:
           S3Bucket:
-            Ref: ConfigBucketName
+            !Ref ConfigBucketName
           S3Key: hopper.zip
         Runtime: python2.7
         MemorySize: '512'

@@ -1,0 +1,19 @@
+language: generic
+
+sudo: required
+
+before_script:
+  - sudo pip install pyopenssl ndg-httpsclient pyasn1
+  - sudo pip install pep8
+
+# command to run tests
+script:
+  - pep8 $(find . -type f | grep '.py$' | xargs)
+
+branches:
+    only:
+        - master
+
+notifications:
+    email:
+        - mkelly.deft@gmail.com
