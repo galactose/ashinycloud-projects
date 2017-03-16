@@ -25,12 +25,12 @@
       Properties:
         Principal: "events.amazonaws.com"
         Action: lambda:InvokeFunction
-        FunctionName: 'hopper'
+        FunctionName: "hopper"
         SourceArn: !GetAtt HopperEventRule.Arn
     HopperLambdaFunction:
       Type: AWS::Lambda::Function
       Properties:
-        FunctionName: 'hopper'
+        FunctionName: "hopper"
         Handler: handler.handler
         Role:
           !GetAtt HopperLambdaRole.Arn
@@ -39,14 +39,14 @@
             !Ref ConfigBucketName
           S3Key: hopper.zip
         Runtime: python2.7
-        MemorySize: '512'
-        Timeout: '240'
+        MemorySize: "512"
+        Timeout: "240"
     HopperEventRule:
       Type: AWS::Events::Rule
       Properties:
         Description: CloudWatch Event Rule to initiate the hopper which initiates the target Lambda function on the datasets in a round robin fashion.
         Name: "hopper"
-        ScheduleExpression: 'rate(15 minutes)'
+        ScheduleExpression: "rate(15 minutes)"
         State: ENABLED
         Targets:
           - Arn:
@@ -54,5 +54,4 @@
             Id:
               'Hopper'
             Input:
-              "Fn::Join": [ "", [ '{ "lambda_function": "', Ref: LambdaFunctionName, '", "config_bucket": "', Ref: ConfigBucketName, '"}' ] ]
-
+              !Sub '{ "lambda_function": "${LambdaFunctionName}", "config_bucket": "${ConfigBucketName}" }'
