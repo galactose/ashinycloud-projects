@@ -3,23 +3,16 @@ import re
 
 import boto3
 
-config_service = boto3.client('config')
-sns_service = boto3.client('sns')
-
-ec2_regex = re.compile('^[a-z]+-[a-z0-9]+-[a-z-0-9]+[-a-z]*'),
 
 ROLES = ('web', 'app', 'jumpbox', 'proxy', 'firewall', )
 ENVIRONMENTS = ('shared', 'build', 'nonprod', 'prod', )
 
 
-class ConfigResult(object):
-    COMPLIANT = 'COMPLIANT'
-    NON_COMPLIANT = 'NON_COMPLIANT'
-
-
 def handler(event, context):
-    invoking_event = event['invokingEvent']
-    config_item = json.loads(invoking_event)['configurationItem']
+    config_service = boto3.client('config')
+    sns_service = boto3.client('sns')
+    ec2_regex = re.compile('^[a-z]+-[a-z0-9]+-[a-z-0-9]+[-a-z]*')
+    config_item = json.loads(event['invokingEvent'])['configurationItem']
     topic_arn = json.loads(event['ruleParameters'])['notification_topic_arn']
     resource_type = config_item['resourceType']
 
@@ -32,7 +25,7 @@ def handler(event, context):
     evaluation = {
         'ComplianceResourceType': config_item['resourceType'],
         'ComplianceResourceId': config_item['resourceId'],
-        'ComplianceType': ConfigResult.NON_COMPLIANT,
+        'ComplianceType': 'NON_COMPLIANT',
         'OrderingTimestamp': config_item['configurationItemCaptureTime']
     }
 
@@ -48,15 +41,14 @@ def handler(event, context):
             'The above resource does not follow the correct tag format,' + \
             'please review and update the resource.'
         # Check the name meets the regex rules for that resource
-        resource_type = resource_regex_dict[resource_type]
-        match_found = bool(resource_type.match(resource_name))
+        match_found = bool(ec2_regex.match(resource_name))
         resource_sections = resource_name.split('-')
         if match_found and len(resource_sections) > 2 and \
            resource_sections[0] in ROLES and \
            resource_sections[2] in ENVIRONMENTS:
-            evaluation['ComplianceType'] = ConfigResult.COMPLIANT
+            evaluation['ComplianceType'] = 'COMPLIANT'
 
-    if evaluation['ComplianceType'] == ConfigResult.NON_COMPLIANT:
+    if evaluation['ComplianceType'] == 'NON_COMPLIANT':
         resource_id = config_item['resourceId']
         sns_subject = 'Notification of non-compliant resource,' + \
             'Type: %s, ID: %s' % (resource_type.split('::')[-1], resource_id)
