@@ -1,12 +1,12 @@
-import boto3
+# -*- coding: utf-8 -*-
+
 import json
-
-
-lambda_client = boto3.client('lambda')
+import boto3
 
 
 def handler(event, context):
     print 'Event:', event
+    lambda_client = boto3.client('lambda')
     if 'config_bucket' not in event:
         raise Exception('Missing config_bucket')
     if 'lambda_function' not in event:
