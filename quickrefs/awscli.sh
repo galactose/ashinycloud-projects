@@ -41,7 +41,7 @@ aws ec2 create-volume \
   --encrypted true \
   --availability-zone az \
   --query VolumeId \
-  --output test
+  --output text
 
 # List the available set of server cert ARNs
 aws iam list-server-certificates \
