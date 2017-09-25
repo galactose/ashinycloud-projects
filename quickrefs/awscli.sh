@@ -17,36 +17,33 @@
 
 export AWS_REGION=your-region-here
 export AWS_PROFILE=your-cli-access-profile-here
+export AWS_DEFAULT_OUTPUT=text
 
 # Get your user ARN
 aws iam get-user --query 'User.Arn'
 
 # Get the list of key pairs available to an account sorted alphabetically
 aws ec2 describe-key-pairs \
-  --query 'KeyPairs[*].[KeyName] | sort(@)' \
-  --output text
+  --query 'KeyPairs[*].[KeyName] | sort(@)'
 
 # List account role ARNs
-aws iam list-roles --query 'Roles[Arn]' --output text
+aws iam list-roles --query 'Roles[].Arn'
 
 # List instance ID's by name tag using filter
 aws ec2 describe-instances \
   --filter 'Name=tag:Name,Values=instance-name-here' \
-  --query 'Reservations[*].Instances[*].InstanceId' \
-  --output text
+  --query 'Reservations[*].Instances[*].InstanceId'
 
 # Create a volume from a snapshot ID and get the resulting volume ID
 aws ec2 create-volume \
   --snapshot-id snap-id \
   --encrypted true \
   --availability-zone az \
-  --query VolumeId \
-  --output text
+  --query VolumeId
 
 # List the available set of server cert ARNs
 aws iam list-server-certificates \
-  --query 'ServerCertificateMetadataList[*][Arn]' \
-  --output text
+  --query 'ServerCertificateMetadataList[*][Arn]'
 
 # Get the first Cloudformation stack and return a specific output key value
 aws cloudformation describe-stacks \
@@ -55,20 +52,17 @@ aws cloudformation describe-stacks \
 # Get AMIs that are available and have a substring in their name
 aws ec2 describe-images \
   --filters Name=name,Values=*-name-contains-* Name=state,Values=available \
-  --query 'Images[*].[ImageId,Name] | sort(@)' \
-  --output text
+  --query 'Images[*].[ImageId,Name] | sort(@)'
 
 # Get available Cloudformation stacks, sort by age
 aws cloudformation list-stacks \
-  --query 'StackSummaries[?StackStatus==`CREATE_COMPLETE`].[CreationTime,StackName] | sort(@)' \
-  --output text
+  --query 'StackSummaries[?StackStatus==`CREATE_COMPLETE`].[CreationTime,StackName] | sort(@)'
 
 # Get the private IPs of a set of instances based on a shared tag*
 # *only useful if you're expecting the instance to have only one ENI.
 aws ec2 describe-instances \
   --filter Name=tag:Name,Values=tag \
-  --query 'Reservations[*].Instances[].[NetworkInterfaces[0].PrivateIpAddress]' \
-  --output text
+  --query 'Reservations[*].Instances[].[NetworkInterfaces[0].PrivateIpAddress]'
 
 # List record sets
 aws route53 list-resource-record-sets \
@@ -77,27 +71,23 @@ aws route53 list-resource-record-sets \
 
 # Get the availability zones of VPC subnets
 aws ec2 describe-subnets \
-  --query 'Subnets[*].[VpcId,SubnetId,AvailabilityZone]' --output text
+  --query 'Subnets[*].[VpcId,SubnetId,AvailabilityZone]'
 
 # Get the volume ID of an instance knowing the mount point and instance ID
 aws ec2 describe-volumes \
   --filters Name=attachment.instance-id,Values=instance-id \
-  --query 'Volumes[*].Attachments[?Device==`/dev/sdh`].VolumeId' \
-  --output text
+  --query 'Volumes[*].Attachments[?Device==`/dev/sdh`].VolumeId'
 
 # Get the userdata of an EC2 instance
 aws ec2 describe-instance-attribute \
   --attribue userData \
   --instance-id instance-id \
-  --query 'Userdata.Value' \
-  --output text | base64 --decode
+  --query 'Userdata.Value' | base64 --decode
 
 # Get account security groups and format the output as JSON
 aws ec2 describe-security-groups \
-  --query SecurityGroups[*].{ID: GroupId} \
-  --output text
+  --query SecurityGroups[*].{ID: GroupId}
 
 # Get the first security group ID alphabetically
 aws ec2 describe-security-groups \
-  --query 'SecurityGroups[*].GroupId | sort(@) | [0]' \
-  --output text
+  --query 'SecurityGroups[*].GroupId | sort(@) | [0]'
