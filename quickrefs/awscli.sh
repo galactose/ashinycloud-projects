@@ -24,14 +24,14 @@ aws iam get-user --query 'User.Arn'
 
 # Get the list of key pairs available to an account sorted alphabetically
 aws ec2 describe-key-pairs \
-  --query 'KeyPairs[*].[KeyName] | sort(@)'
+  --query 'KeyPairs[*].KeyName | sort(@)'
 
 # List account role ARNs
 aws iam list-roles --query 'Roles[].Arn'
 
 # List instance ID's by name tag using filter
 aws ec2 describe-instances \
-  --filter 'Name=tag:Name,Values=instance-name-here' \
+  --filter 'Name=tag:Name,Values=*' \
   --query 'Reservations[*].Instances[*].InstanceId'
 
 # Create a volume from a snapshot ID and get the resulting volume ID
