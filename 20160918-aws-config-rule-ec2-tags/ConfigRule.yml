@@ -10,13 +10,13 @@ Parameters:
     Type: String
 Resources:
   LambdaRole:
-    Type: "AWS::IAM::Role"
+    Type: AWS::IAM::Role
     Properties:
       ManagedPolicyArns:
         - !Ref TagComplianceLambdaManagedPolicy
       AssumeRolePolicyDocument:
         Statement:
-          - Action: "sts:AssumeRole"
+          - Action: sts:AssumeRole
             Effect: Allow
             Principal:
               Service: lambda.amazonaws.com

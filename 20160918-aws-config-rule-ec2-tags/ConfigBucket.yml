@@ -23,7 +23,7 @@ Resources:
             Sid: DenyUnEncryptedObjectUploads
             Effect: Deny
             Action:
-              - "s3:PutObject"
+              - s3:PutObject
             Principal: "*"
             Resource: !Sub |
               arn:aws:s3:::${LambdaBucketName}/*

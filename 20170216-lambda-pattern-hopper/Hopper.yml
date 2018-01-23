@@ -21,7 +21,7 @@
               Principal:
                 Service: lambda.amazonaws.com
     HopperLambdaPermission:
-      Type: "AWS::Lambda::Permission"
+      Type: AWS::Lambda::Permission
       Properties:
         Principal: "events.amazonaws.com"
         Action: lambda:InvokeFunction
